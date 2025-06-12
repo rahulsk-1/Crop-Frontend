@@ -57,6 +57,11 @@ function Navbar() {
                 Predict
               </Link>
             </li>
+            <li className="nav-item">
+              <Link to="/price" className={`nav-link ${location.pathname === "/price" ? "active text-warning" : "text-white"}`}>
+                Price
+              </Link>
+            </li>
           </ul>
 
           {/* Login / Logout Button */}

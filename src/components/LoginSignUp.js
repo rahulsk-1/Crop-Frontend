@@ -2,16 +2,17 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-
 function LoginSignUp() {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [repassword, setRepassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false); // NEW
+  const navigate = useNavigate();
+
   const handleLoginSignUp = async (e) => {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault();
     setError("");
 
     if (!username || !password) {
@@ -25,22 +26,25 @@ function LoginSignUp() {
     }
 
     try {
+      setLoading(true); // Start loading
+
       const endpoint = isLogin ? "/login" : "/signup";
       const response = await axios.post(`https://crop-backend-bblk.onrender.com/${endpoint}`, {
         username,
         password,
       });
-      console.log(response.data);
-      if(isLogin){
-        localStorage.setItem("user",response.data.user)
-        localStorage.setItem("token",response.data.token)
-        navigate("/")
-      }
-      else{
-        setIsLogin(true)
+
+      if (isLogin) {
+        localStorage.setItem("user", response.data.user);
+        localStorage.setItem("token", response.data.token);
+        navigate("/");
+      } else {
+        setIsLogin(true);
       }
     } catch (err) {
       setError("Invalid credentials or server error.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -48,16 +52,10 @@ function LoginSignUp() {
     <div className="auth-container">
       <div className="card auth-card shadow-lg">
         <div className="toggle-container">
-          <button
-            className={`toggle-btn ${isLogin ? "active" : ""}`}
-            onClick={() => setIsLogin(true)}
-          >
+          <button className={`toggle-btn ${isLogin ? "active" : ""}`} onClick={() => setIsLogin(true)}>
             Login
           </button>
-          <button
-            className={`toggle-btn ${!isLogin ? "active" : ""}`}
-            onClick={() => setIsLogin(false)}
-          >
+          <button className={`toggle-btn ${!isLogin ? "active" : ""}`} onClick={() => setIsLogin(false)}>
             Signup
           </button>
         </div>
@@ -100,8 +98,8 @@ function LoginSignUp() {
                 />
               </div>
             )}
-            <button type="submit" className="btn btn-success w-100">
-              {isLogin ? "Login" : "Signup"}
+            <button type="submit" className="btn btn-success w-100" disabled={loading}>
+              {loading ? "Please wait..." : isLogin ? "Login" : "Signup"}
             </button>
           </form>
         </div>
@@ -174,7 +172,12 @@ function LoginSignUp() {
             transition: 0.3s;
           }
 
-          .btn:hover {
+          .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+          }
+
+          .btn:hover:not(:disabled) {
             transform: scale(1.05);
           }
         `}

@@ -3,7 +3,7 @@ import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import Adddetails from "./Adddetails";
 
-const GOOGLE_API_KEY = "AIzaSyBZTvIFNljZJgrrzWbImy6h4UfqoS05QcA"; // Replace with your actual API key
+// const GOOGLE_API_KEY = "AIzaSyBZTvIFNljZJgrrzWbImy6h4UfqoS05QcA"; // Replace with your actual API key
 
 const COLORS = [
   "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28AFB", "#F26D85", 
@@ -16,14 +16,16 @@ const COLORS = [
 const Analysis = (props) => {
   const [location, setLocation] = useState("");
   const [radius, setRadius] = useState("");
-  const [coordinates, setCoordinates] = useState(null);
+  const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [cropData, setCropData] = useState([]);
   const [morebutton,setMorebutton] =useState(false);
+  const [latitude,setLatitude] =useState(null);
+  const [longitude,setLongitude] =useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setCoordinates(null);
+    setAddress("");
     setError("");
     setCropData([]);
 
@@ -33,26 +35,12 @@ const Analysis = (props) => {
     }
 
     try {
-      const response = await axios.get(
-        'https://maps.googleapis.com/maps/api/geocode/json',
-        {
-          params: {
-            address: location,
-            key: GOOGLE_API_KEY,
-          },
-        }
-      );
-
-      if (response.data.status === "OK") {
-        const { lat, lng } = response.data.results[0].geometry.location;
-        setCoordinates({ lat, lng });
 
         const radiusNumber = parseFloat(radius);
 
         try {
           const cropResponse = await axios.post("https://crop-backend-bblk.onrender.com/crop_count", {
-            latitude: lat,
-            longitude: lng,
+            address:location,
             threshold: radiusNumber,
           });
 
@@ -64,15 +52,16 @@ const Analysis = (props) => {
             value,
           }));
           setCropData(formattedData);
+          setAddress(cropResponse.data.address);
+          setLatitude(cropResponse.data.latitude);
+          setLongitude(cropResponse.data.longitude);
 
         } catch (err) {
           setError(err.response?.data?.error || "Something went wrong. Try again.");
         }
 
-      } else {
-        setError("No valid location found.");
       }
-    } catch (err) {
+    catch (err) {
       setError("Error fetching location. Try again.");
     }
   };
@@ -118,6 +107,7 @@ const Analysis = (props) => {
       </form>
 
       {error && <p className="alert alert-danger mt-3">{error}</p>}
+      {address && <p className="alert alert-primary mt-3"><b>Results for Location :</b>{address}</p>}
 
       {/* Display Pie Chart if data is available */}
       {cropData.length > 0 && (
@@ -144,9 +134,9 @@ const Analysis = (props) => {
           </ResponsiveContainer>
         </div>
       )}
-
-      {props.prediction && coordinates &&
-        <Adddetails prediction={props.prediction} latitude={coordinates.lat} longitude={coordinates.lng}/>
+      {/* {console.log(props.prediction)} */}
+      {props.prediction && latitude && longitude &&
+        <Adddetails prediction={props.prediction} latitude={latitude} longitude={longitude}/>
       }
 
 </>}
