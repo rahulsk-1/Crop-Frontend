@@ -33,7 +33,7 @@ function Price() {
     }
 
     try {
-      const res = await axios.post("http://127.0.0.1:5000/result", formData);
+      const res = await axios.post("https://crop-backend-bblk.onrender.com/result", formData);
       setResponse(res.data);
     } catch (err) {
       setError("🚫 Failed to fetch data. Please try again.");
